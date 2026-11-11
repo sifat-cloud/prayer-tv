@@ -1,666 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart TV Prayer Display</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/adhan@4.4.3/lib/bundles/adhan.umd.js"></script>
-  <style>
-    :root {
-      --bg: #07090e;
-      --card-bg: rgba(18, 24, 38, 0.65);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --card-active-border: rgba(16, 185, 129, 0.7);
-      --accent: #10b981;
-      --accent-soft: rgba(16, 185, 129, 0.15);
-      --accent-glow: rgba(16, 185, 129, 0.35);
-      --gold: #d4af37;
-      --gold-soft: rgba(212, 175, 55, 0.15);
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --text-dim: #64748b;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart TV Prayer Display</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Fraunces:opsz,wght@9..144,400;600&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/adhan@4.4.3/lib/bundles/adhan.umd.js"></script>
+<style>
+:root{
+  --bg:#f3efe4; --bg2:#e7e1d0; --ink:#1b2347; --muted:#6a6f8a; --line:rgba(27,35,71,.16);
+  --gold:#9a7424; --next:#0f7d66; --arch:rgba(27,35,71,.14); --pat:rgba(27,35,71,.05);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c1224; --bg2:#141c38; --ink:#eef0f7; --muted:#8d95b5; --line:rgba(238,240,247,.14);
+  --gold:#e0bd72; --next:#62d6b4; --arch:rgba(238,240,247,.12); --pat:rgba(224,189,114,.06);
+}}
+:root[data-theme="dark"]{
+  --bg:#0c1224; --bg2:#141c38; --ink:#eef0f7; --muted:#8d95b5; --line:rgba(238,240,247,.14);
+  --gold:#e0bd72; --next:#62d6b4; --arch:rgba(238,240,247,.12); --pat:rgba(224,189,114,.06);
+}
+*{box-sizing:border-box;margin:0;user-select:none}
+body{
+  min-height:100vh; color:var(--ink); font-family:'Figtree',system-ui,sans-serif;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 38%, var(--bg2), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cpath d='M32 4l6 20 20 8-20 8-6 20-6-20-20-8 20-8z' fill='none' stroke='%23888' stroke-opacity='.35' stroke-width='1'/%3E%3C/svg%3E"),
+    var(--bg);
+  display:flex; flex-direction:column; padding:clamp(16px,3vw,44px);
+  font-variant-numeric:tabular-nums; overflow:hidden;
+  transition:filter 1.2s cubic-bezier(.4,0,.2,1);
+}
+body.night-dim{filter:brightness(.2) contrast(.95)}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;gap:6px}
+.brand h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(26px,3vw,38px);letter-spacing:.02em;display:flex;align-items:baseline;gap:14px}
+.brand h1 span{font-family:'Amiri',serif;font-weight:400;color:var(--gold);font-size:.95em}
+.meta{color:var(--muted);font-size:14px}
+.clock{text-align:right}
+.clock .t{font-family:'Fraunces',serif;font-size:clamp(30px,4vw,54px);font-weight:400;line-height:1}
+.clock .t small{font-size:.4em;color:var(--muted);margin-left:6px;font-family:'Figtree',sans-serif}
+.clock .d{margin-top:6px;color:var(--muted);font-size:14px}
+.clock .h{font-family:'Amiri',serif;color:var(--gold);font-size:16px}
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-    }
+main{flex:1;display:grid;place-items:center;padding:clamp(8px,2vh,24px) 0}
+.mihrab{position:relative;width:min(88vw,calc(52vh*.84),420px);aspect-ratio:400/480}
+.mihrab svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.mihrab .track{fill:none;stroke:var(--arch);stroke-width:2}
+.mihrab .fill{fill:none;stroke:var(--gold);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+.mihrab .tint{fill:var(--pat);stroke:none}
+.inner{position:absolute;inset:22% 10% 6%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px}
+.inner .lbl{color:var(--muted);font-size:clamp(13px,1.6vw,16px)}
+.inner .ar{font-family:'Amiri',serif;color:var(--gold);font-size:clamp(28px,4.5vw,48px);line-height:1.1}
+.inner .name{font-family:'Fraunces',serif;font-size:clamp(20px,2.6vw,30px)}
+.inner .cd{font-family:'Fraunces',serif;font-size:clamp(38px,6.4vw,76px);line-height:1;margin-top:8px}
+.inner .at{color:var(--muted);font-size:14px;margin-top:4px}
 
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 3.5rem 5rem;
-      overflow: hidden;
-      transition: filter 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-    }
+.times{display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--line)}
+.p{padding:clamp(14px,2.4vh,26px) 12px;text-align:center;border-right:1px solid var(--line);position:relative;transition:background .4s}
+.p:last-child{border-right:0}
+.p .ar{font-family:'Amiri',serif;font-size:clamp(20px,2.2vw,28px);color:var(--muted)}
+.p .en{font-size:14px;color:var(--muted);font-weight:500}
+.p .tm{font-family:'Fraunces',serif;font-size:clamp(20px,2.6vw,34px);margin-top:6px}
+.p .tm small{font-size:.5em;margin-left:3px;color:var(--muted);font-family:'Figtree',sans-serif}
+.p.past{opacity:.5}
+.p.now::before,.p.next::before{content:"";position:absolute;left:0;right:0;top:-2px;height:3px}
+.p.now::before{background:var(--gold)} .p.next::before{background:var(--next)}
+.p .tag{position:absolute;top:8px;left:0;right:0;font-size:12px;font-weight:600}
+.p.now .tag{color:var(--gold)} .p.next .tag{color:var(--next)}
+.p.now,.p.next{background:var(--bg2)}
+.p.now .ar,.p.next .ar{color:var(--ink)}
 
-    /* Ambient atmospheric background lighting */
-    body::before {
-      content: "";
-      position: absolute;
-      top: -20%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 70vw;
-      height: 60vh;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(14, 165, 233, 0.04) 50%, transparent 80%);
-      filter: blur(80px);
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    body::after {
-      content: "";
-      position: absolute;
-      bottom: -10%;
-      right: 10%;
-      width: 50vw;
-      height: 40vh;
-      background: radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, transparent 70%);
-      filter: blur(90px);
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    /* Deep sleep mode */
-    body.night-dim {
-      filter: brightness(0.2) contrast(0.95);
-    }
-
-    header, main, footer {
-      position: relative;
-      z-index: 1;
-    }
-
-    /* Header styling */
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 1.5rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .title-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
-
-    .title-row {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .title-row h1 {
-      font-family: 'Cinzel', serif;
-      font-size: 2.5rem;
-      font-weight: 700;
-      letter-spacing: 3px;
-      color: #ffffff;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-    }
-
-    .arabic-title {
-      font-family: 'Amiri', serif;
-      font-size: 1.8rem;
-      color: var(--gold);
-      font-weight: 700;
-      opacity: 0.9;
-    }
-
-    .location-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.6rem;
-      font-size: 1.05rem;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .location-badge .loc-icon {
-      color: var(--accent);
-      font-size: 1.1rem;
-    }
-
-    .method-pill {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 0.2rem 0.65rem;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      letter-spacing: 0.5px;
-    }
-
-    .clock-group {
-      text-align: right;
-    }
-
-    .time-digits {
-      font-size: 4.6rem;
-      font-weight: 800;
-      letter-spacing: -2px;
-      line-height: 0.95;
-      color: #ffffff;
-      font-variant-numeric: tabular-nums;
-      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-    }
-
-    .time-digits .sec {
-      font-size: 2.2rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-left: 0.25rem;
-    }
-
-    .time-digits .ampm {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: var(--accent);
-      margin-left: 0.5rem;
-      letter-spacing: 1px;
-    }
-
-    .date-string {
-      color: var(--text-muted);
-      font-size: 1.2rem;
-      font-weight: 500;
-      margin-top: 0.5rem;
-      letter-spacing: 0.2px;
-    }
-
-    /* Hero Countdown Section */
-    .hero-centerpiece {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin: 2.2rem 0;
-      position: relative;
-    }
-
-    .countdown-capsule {
-      background: linear-gradient(180deg, rgba(26, 34, 52, 0.7) 0%, rgba(14, 19, 31, 0.85) 100%);
-      border: 1px solid var(--card-border);
-      border-radius: 2rem;
-      padding: 1.6rem 4.5rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      backdrop-filter: blur(20px);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .countdown-capsule::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 10%;
-      right: 10%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    }
-
-    .countdown-label {
-      text-transform: uppercase;
-      letter-spacing: 4px;
-      font-size: 0.95rem;
-      color: var(--text-muted);
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .countdown-target-name {
-      color: var(--accent);
-      font-weight: 700;
-      letter-spacing: 2px;
-    }
-
-    .countdown-timer {
-      font-size: 4.8rem;
-      font-weight: 800;
-      color: #ffffff;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: 1px;
-      line-height: 1.1;
-      margin-top: 0.4rem;
-      text-shadow: 0 0 40px var(--accent-glow);
-    }
-
-    /* Prayer Times Grid */
-    .prayer-deck {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 1.4rem;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 1.4rem;
-      padding: 1.8rem 1.4rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      backdrop-filter: blur(14px);
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative;
-      min-height: 160px;
-    }
-
-    .card .arabic-name {
-      font-family: 'Amiri', serif;
-      font-size: 1.5rem;
-      color: var(--text-dim);
-      font-weight: 700;
-      line-height: 1;
-      margin-bottom: 0.2rem;
-      transition: color 0.3s ease;
-    }
-
-    .card .english-name {
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      margin-bottom: 1rem;
-    }
-
-    .card .prayer-time {
-      font-size: 2.1rem;
-      font-weight: 800;
-      color: #ffffff;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: -0.5px;
-    }
-
-    /* Active Highlight Card */
-    .card.next-active {
-      border-color: var(--card-active-border);
-      background: linear-gradient(180deg, rgba(16, 185, 129, 0.18) 0%, rgba(18, 24, 38, 0.9) 100%);
-      box-shadow: 0 10px 40px rgba(16, 185, 129, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-      transform: translateY(-6px) scale(1.02);
-    }
-
-    .card.next-active .arabic-name {
-      color: var(--gold);
-    }
-
-    .card.next-active .english-name {
-      color: var(--accent);
-    }
-
-    .card.next-active .prayer-time {
-      color: #ffffff;
-      text-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
-    }
-
-    .card.next-active::after {
-      content: "NEXT";
-      position: absolute;
-      top: 10px;
-      right: 14px;
-      font-size: 0.65rem;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      background: var(--accent);
-      color: #05130e;
-      padding: 0.18rem 0.5rem;
-      border-radius: 999px;
-    }
-
-    /* Footer styling */
-    footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-top: 1.5rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .system-status {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 1rem;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .status-dot {
-      width: 10px;
-      height: 10px;
-      background: var(--accent);
-      border-radius: 50%;
-      box-shadow: 0 0 12px var(--accent);
-      animation: pulse 2.5s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.85); }
-    }
-
-    .control-actions {
-      display: flex;
-      gap: 0.75rem;
-    }
-
-    .btn {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #e2e8f0;
-      padding: 0.6rem 1.4rem;
-      border-radius: 999px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      backdrop-filter: blur(8px);
-      transition: all 0.25s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .btn:hover {
-      background: rgba(255, 255, 255, 0.14);
-      border-color: rgba(255, 255, 255, 0.25);
-      color: #ffffff;
-      transform: translateY(-1px);
-    }
-
-    .btn.active {
-      background: var(--accent);
-      color: #061912;
-      border-color: var(--accent);
-      box-shadow: 0 0 20px var(--accent-glow);
-    }
-  </style>
+footer{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px;color:var(--muted);font-size:13px}
+.live{display:flex;align-items:center;gap:8px}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--next);animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 var(--next)}70%,100%{box-shadow:0 0 0 8px transparent}}
+.btns{display:flex;gap:8px}
+button{font:500 13px 'Figtree',sans-serif;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer}
+button:hover{background:var(--bg2)}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+button.active{border-color:var(--next);color:var(--next)}
+@media (max-width:760px){
+  body{overflow:auto}
+  .times{grid-template-columns:repeat(3,1fr)}
+  .p{border-bottom:1px solid var(--line)} .p:nth-child(3){border-right:0}
+  .clock{text-align:left}
+}
+@media (prefers-reduced-motion:reduce){.live i{animation:none}.mihrab .fill{transition:none}}
+</style>
 </head>
 <body>
-  <!-- Header with Brand, Coordinates, and Clock -->
-  <header>
-    <div class="title-group">
-      <div class="title-row">
-        <h1>SALAH</h1>
-        <span class="arabic-title">مواقيت الصلاة</span>
-      </div>
-      <div class="location-badge">
-        <span class="loc-icon">📍</span>
-        <span>Brooklyn, New York</span>
-        <span class="method-pill">ISNA • Hanafi</span>
-      </div>
-    </div>
+<header>
+  <div class="brand">
+    <h1>Salah <span lang="ar" dir="rtl">مواقيت الصلاة</span></h1>
+    <div class="meta">Brooklyn, New York · ISNA, Hanafi Asr</div>
+  </div>
+  <div class="clock">
+    <div class="t" id="clock">--:--<small>--</small></div>
+    <div class="d" id="date-label">Loading date...</div>
+    <div class="h" id="hijri" lang="ar"></div>
+  </div>
+</header>
 
-    <div class="clock-group">
-      <div class="time-digits" id="clock">
-        <span id="clock-main">--:--</span><span class="sec" id="clock-sec">:--</span><span class="ampm" id="clock-ampm">--</span>
-      </div>
-      <div class="date-string" id="date-label">Loading date...</div>
+<main>
+  <div class="mihrab">
+    <svg viewBox="0 0 400 480" aria-hidden="true">
+      <path class="tint" d="M20 470V230C20 130 150 70 200 10C250 70 380 130 380 230V470Z"/>
+      <path class="track" d="M20 470V230C20 130 150 70 200 10C250 70 380 130 380 230V470" pathLength="100"/>
+      <path class="fill" id="arc" d="M20 470V230C20 130 150 70 200 10C250 70 380 130 380 230V470" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>
+    </svg>
+    <div class="inner">
+      <div class="lbl" id="lbl">Next prayer</div>
+      <div class="ar" id="nar" lang="ar"></div>
+      <div class="name" id="target-name"></div>
+      <div class="cd" id="countdown-val" role="timer">--:--:--</div>
+      <div class="at" id="at"></div>
     </div>
-  </header>
+  </div>
+</main>
 
-  <!-- Central Countdown Section -->
-  <main class="hero-centerpiece">
-    <div class="countdown-capsule">
-      <div class="countdown-label">
-        <span>Countdown to</span>
-        <span class="countdown-target-name" id="target-name">--</span>
-      </div>
-      <div class="countdown-timer" id="countdown-val">--:--:--</div>
-    </div>
-  </main>
-
-  <!-- 6-Prayer Grid -->
-  <section class="prayer-deck">
-    <div class="card" id="card-fajr">
-      <div class="arabic-name">الفجر</div>
-      <div class="english-name">Fajr</div>
-      <div class="prayer-time" id="time-fajr">--:--</div>
-    </div>
-    <div class="card" id="card-sunrise">
-      <div class="arabic-name">الشروق</div>
-      <div class="english-name">Sunrise</div>
-      <div class="prayer-time" id="time-sunrise">--:--</div>
-    </div>
-    <div class="card" id="card-dhuhr">
-      <div class="arabic-name">الظهر</div>
-      <div class="english-name">Dhuhr</div>
-      <div class="prayer-time" id="time-dhuhr">--:--</div>
-    </div>
-    <div class="card" id="card-asr">
-      <div class="arabic-name">العصر</div>
-      <div class="english-name">Asr</div>
-      <div class="prayer-time" id="time-asr">--:--</div>
-    </div>
-    <div class="card" id="card-maghrib">
-      <div class="arabic-name">المغرب</div>
-      <div class="english-name">Maghrib</div>
-      <div class="prayer-time" id="time-maghrib">--:--</div>
-    </div>
-    <div class="card" id="card-isha">
-      <div class="arabic-name">العشاء</div>
-      <div class="english-name">Isha</div>
-      <div class="prayer-time" id="time-isha">--:--</div>
-    </div>
-  </section>
-
-  <!-- Footer with Status and TV Controls -->
+<section>
+  <div class="times" id="times"></div>
   <footer>
-    <div class="system-status">
-      <div class="status-dot"></div>
-      <span id="screen-mode-desc">Live Display • 24/7 Monitoring</span>
-    </div>
-
-    <div class="control-actions">
-      <button class="btn" id="fs-btn" onclick="toggleFullScreen()">
-        <span>⛶</span> Full Screen
-      </button>
-      <button class="btn" id="test-btn" onclick="testAudio()">
-        <span>▶</span> Test Adhan
-      </button>
-      <button class="btn" id="audio-btn" onclick="enableAudio()">
-        <span>🔊</span> Arm Audio
-      </button>
+    <div class="live"><i></i><span id="screen-mode-desc">Live display, updates every second</span></div>
+    <div class="btns">
+      <button id="fs-btn" onclick="toggleFullScreen()">Full screen</button>
+      <button id="test-btn" onclick="testAudio()">Test adhan</button>
+      <button id="audio-btn" onclick="enableAudio()">Arm audio</button>
     </div>
   </footer>
+</section>
 
-  <audio id="adhan-audio" preload="auto">
-    <source src="adhan.mp3" type="audio/mpeg">
-  </audio>
+<audio id="adhan-audio" preload="auto">
+  <source src="adhan.mp3" type="audio/mpeg">
+</audio>
 
-  <script>
-    const LATITUDE = 40.6782;
-    const LONGITUDE = -73.9442;
+<script>
+const LATITUDE = 40.6782;
+const LONGITUDE = -73.9442;
 
-    const audio = document.getElementById('adhan-audio');
-    const audioBtn = document.getElementById('audio-btn');
-    const fsBtn = document.getElementById('fs-btn');
-    let audioUnlocked = false;
-    let playedPrayersToday = {};
+const audio = document.getElementById('adhan-audio');
+const audioBtn = document.getElementById('audio-btn');
+const fsBtn = document.getElementById('fs-btn');
+let audioUnlocked = false;
+let playedPrayersToday = {};
 
-    function toggleFullScreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-          console.log(`Fullscreen notice: ${err.message}`);
-        });
-        fsBtn.innerHTML = "<span>✕</span> Exit Full Screen";
-      } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-          fsBtn.innerHTML = "<span>⛶</span> Full Screen";
-        }
-      }
+const NAMES = [
+  {key:'fajr',name:'Fajr',ar:'الفجر',isPrayer:true},
+  {key:'sunrise',name:'Sunrise',ar:'الشروق',isPrayer:false},
+  {key:'dhuhr',name:'Dhuhr',ar:'الظهر',isPrayer:true},
+  {key:'asr',name:'Asr',ar:'العصر',isPrayer:true},
+  {key:'maghrib',name:'Maghrib',ar:'المغرب',isPrayer:true},
+  {key:'isha',name:'Isha',ar:'العشاء',isPrayer:true}
+];
+
+// Build the prayer row once
+const wrap = document.getElementById('times');
+NAMES.forEach(p => {
+  const d = document.createElement('div');
+  d.className = 'p'; d.id = 'card-' + p.key;
+  d.innerHTML = '<div class="tag"></div><div class="ar" lang="ar">' + p.ar + '</div><div class="en">' + p.name +
+                '</div><div class="tm" id="time-' + p.key + '">--:--</div>';
+  wrap.appendChild(d);
+});
+
+function toggleFullScreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(err => console.log('Fullscreen notice: ' + err.message));
+  } else if (document.exitFullscreen) {
+    document.exitFullscreen();
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  fsBtn.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
+});
+
+function enableAudio() {
+  audio.play().then(() => {
+    audio.pause(); audio.currentTime = 0;
+    audioUnlocked = true; audioBtn.classList.add('active'); audioBtn.textContent = 'Adhan ready';
+  }).catch(() => {
+    audioUnlocked = true; audioBtn.classList.add('active'); audioBtn.textContent = 'Audio armed';
+  });
+}
+
+function testAudio() {
+  audio.currentTime = 0;
+  audio.play().then(() => {
+    audioUnlocked = true; audioBtn.classList.add('active'); audioBtn.textContent = 'Adhan ready';
+  }).catch(err => alert('Please ensure adhan.mp3 is uploaded. Details: ' + err.message));
+}
+
+window.addEventListener('click', () => { if (!audioUnlocked) enableAudio(); }, { once: true });
+
+function parts(date) {
+  const h = date.getHours();
+  return { t: String(h % 12 || 12).padStart(2, '0') + ':' + String(date.getMinutes()).padStart(2, '0'), s: h >= 12 ? 'PM' : 'AM' };
+}
+
+function getParams() {
+  const params = adhan.CalculationMethod.NorthAmerica();
+  params.madhab = adhan.Madhab.Hanafi;
+  return params;
+}
+
+function prayersFor(date) {
+  return new adhan.PrayerTimes(new adhan.Coordinates(LATITUDE, LONGITUDE), date, getParams());
+}
+
+function toSchedule(pt) {
+  return NAMES.map(n => ({ ...n, time: pt[n.key] }));
+}
+
+function update() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+
+  const c = parts(now);
+  document.getElementById('clock').innerHTML = c.t + '<small>:' + pad(now.getSeconds()) + ' ' + c.s + '</small>';
+  document.getElementById('date-label').textContent = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  try { document.getElementById('hijri').textContent = now.toLocaleDateString('ar-u-ca-islamic-umalqura', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) {}
+
+  const today = prayersFor(now);
+  const schedule = toSchedule(today);
+
+  schedule.forEach(p => {
+    const f = parts(p.time);
+    document.getElementById('time-' + p.key).innerHTML = f.t + '<small>' + f.s + '</small>';
+  });
+
+  // Next and previous events
+  const nextIdx = schedule.findIndex(p => p.time > now);
+  let target, prev, isTomorrow = false, curKey = null;
+
+  if (nextIdx === -1) {
+    const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+    target = { ...schedule[0], time: prayersFor(tomorrow).fajr };
+    prev = schedule[5].time; curKey = 'isha'; isTomorrow = true;
+  } else {
+    target = schedule[nextIdx];
+    if (nextIdx === 0) {
+      const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
+      prev = prayersFor(yesterday).isha;
+    } else {
+      prev = schedule[nextIdx - 1].time; curKey = schedule[nextIdx - 1].key;
     }
+  }
 
-    function enableAudio() {
-      audio.play().then(() => {
-        audio.pause();
-        audio.currentTime = 0;
-        audioUnlocked = true;
-        audioBtn.classList.add('active');
-        audioBtn.innerHTML = "<span>✔</span> Adhan Ready";
-      }).catch(err => {
-        audioUnlocked = true;
-        audioBtn.classList.add('active');
-        audioBtn.innerHTML = "<span>✔</span> Audio Armed";
-      });
+  // Countdown and arch progress
+  const diffSecTotal = Math.max(0, Math.floor((target.time - now) / 1000));
+  const diffMinTotal = Math.floor(diffSecTotal / 60);
+  const h = Math.floor(diffSecTotal / 3600), m = Math.floor((diffSecTotal % 3600) / 60), s = diffSecTotal % 60;
+  document.getElementById('countdown-val').textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+  document.getElementById('lbl').textContent = isTomorrow ? 'Next prayer, tomorrow' : 'Next prayer';
+  document.getElementById('nar').textContent = target.ar;
+  document.getElementById('target-name').textContent = target.name;
+  const tf = parts(target.time);
+  document.getElementById('at').textContent = 'at ' + tf.t.replace(/^0/, '') + ' ' + tf.s;
+  const prog = Math.min(1, Math.max(0, (now - prev) / (target.time - prev)));
+  document.getElementById('arc').setAttribute('stroke-dashoffset', (100 - prog * 100).toFixed(2));
+
+  // Highlight row
+  const curIdx = schedule.findIndex(p => p.key === curKey);
+  schedule.forEach((p, i) => {
+    const el = document.getElementById('card-' + p.key);
+    const isNext = !isTomorrow && i === nextIdx;
+    const isNow = p.key === curKey;
+    el.className = 'p' + (isNow ? ' now' : isNext ? ' next' : '') + (i < curIdx ? ' past' : '');
+    el.firstChild.textContent = isNow ? 'Now' : isNext ? 'Next' : '';
+  });
+
+  // Smart dimming: 11:30 PM - 5:00 AM unless within 20m of the next prayer
+  const curHour = now.getHours(), curMin = now.getMinutes();
+  const isLateNight = (curHour === 23 && curMin >= 30) || curHour < 5;
+  const body = document.body;
+  const statusDesc = document.getElementById('screen-mode-desc');
+  if (isLateNight && diffMinTotal > 20) {
+    body.className = 'night-dim';
+    statusDesc.textContent = 'Night sleep mode (dimmed)';
+  } else {
+    body.className = '';
+    statusDesc.textContent = 'Live display, updates every second';
+  }
+
+  // Adhan trigger
+  schedule.filter(p => p.isPrayer).forEach(p => {
+    const key = p.key + '-' + now.toDateString();
+    if (Math.abs(now - p.time) < 1500 && !playedPrayersToday[key]) {
+      playedPrayersToday[key] = true;
+      body.className = '';
+      if (audio) { audio.currentTime = 0; audio.play().catch(e => console.log('Adhan blocked:', e)); }
     }
+  });
+}
 
-    function testAudio() {
-      audio.currentTime = 0;
-      audio.play().then(() => {
-        audioUnlocked = true;
-        audioBtn.classList.add('active');
-        audioBtn.innerHTML = "<span>✔</span> Adhan Ready";
-      }).catch(err => {
-        alert("Please ensure adhan.mp3 is uploaded. Details: " + err.message);
-      });
-    }
-
-    window.addEventListener('click', () => {
-      if (!audioUnlocked) enableAudio();
-    }, { once: true });
-
-    function formatTime(date) {
-      if (!date) return '--:--';
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-    }
-
-    function calculatePrayers() {
-      const coordinates = new adhan.Coordinates(LATITUDE, LONGITUDE);
-      const params = adhan.CalculationMethod.NorthAmerica();
-      params.madhab = adhan.Madhab.Hanafi;
-      const today = new Date();
-      return new adhan.PrayerTimes(coordinates, today, params);
-    }
-
-    function update() {
-      const now = new Date();
-
-      // Precision Split Clock (HH:MM | :SS | AM/PM)
-      const hours = now.getHours();
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      const displayHours = String(hours % 12 || 12).padStart(2, '0');
-
-      document.getElementById('clock-main').innerText = `${displayHours}:${minutes}`;
-      document.getElementById('clock-sec').innerText = `:${seconds}`;
-      document.getElementById('clock-ampm').innerText = ampm;
-
-      document.getElementById('date-label').innerText = now.toLocaleDateString([], {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-      });
-
-      const prayers = calculatePrayers();
-      if (!prayers) return;
-
-      const schedule = [
-        { key: 'fajr', name: 'Fajr', time: prayers.fajr, isPrayer: true },
-        { key: 'sunrise', name: 'Sunrise', time: prayers.sunrise, isPrayer: false },
-        { key: 'dhuhr', name: 'Dhuhr', time: prayers.dhuhr, isPrayer: true },
-        { key: 'asr', name: 'Asr', time: prayers.asr, isPrayer: true },
-        { key: 'maghrib', name: 'Maghrib', time: prayers.maghrib, isPrayer: true },
-        { key: 'isha', name: 'Isha', time: prayers.isha, isPrayer: true }
-      ];
-
-      schedule.forEach(p => {
-        document.getElementById(`time-${p.key}`).innerText = formatTime(p.time);
-      });
-
-      let next = schedule.find(p => p.time > now);
-      let targetTime, targetName, isTomorrow = false;
-
-      if (!next) {
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const coords = new adhan.Coordinates(LATITUDE, LONGITUDE);
-        const params = adhan.CalculationMethod.NorthAmerica();
-        const tomorrowPrayers = new adhan.PrayerTimes(coords, tomorrow, params);
-        targetTime = tomorrowPrayers.fajr;
-        targetName = 'Fajr (Tomorrow)';
-        isTomorrow = true;
-      } else {
-        targetTime = next.time;
-        targetName = next.name;
-      }
-
-      document.querySelectorAll('.card').forEach(card => card.classList.remove('next-active'));
-      if (!isTomorrow && next) {
-        const activeCard = document.getElementById(`card-${next.key}`);
-        if (activeCard) activeCard.classList.add('next-active');
-      }
-
-      const diffMs = targetTime - now;
-      const diffSecTotal = Math.max(0, Math.floor(diffMs / 1000));
-      const diffMinTotal = Math.floor(diffSecTotal / 60);
-
-      const h = Math.floor(diffSecTotal / 3600);
-      const m = Math.floor((diffSecTotal % 3600) / 60);
-      const s = diffSecTotal % 60;
-
-      document.getElementById('target-name').innerText = targetName;
-      document.getElementById('countdown-val').innerText = 
-        `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-
-      // Smart dimming: 11:30 PM - 5:00 AM unless within 20m of Fajr
-      const curHour = now.getHours();
-      const curMin = now.getMinutes();
-      const isLateNight = (curHour === 23 && curMin >= 30) || (curHour < 5);
-      const isNearPrayer = diffMinTotal <= 20;
-
-      const body = document.body;
-      const statusDesc = document.getElementById('screen-mode-desc');
-
-      if (isLateNight && !isNearPrayer) {
-        body.className = 'night-dim';
-        statusDesc.innerText = 'Night Sleep Mode (Dimmed)';
-      } else {
-        body.className = '';
-        statusDesc.innerText = 'Live Display • 24/7 Monitoring';
-      }
-
-      // Adhan trigger
-      schedule.filter(p => p.isPrayer).forEach(p => {
-        const prayerDiff = Math.abs(now - p.time);
-        const prayerKey = `${p.key}-${now.toDateString()}`;
-        if (prayerDiff < 1500 && !playedPrayersToday[prayerKey]) {
-          playedPrayersToday[prayerKey] = true;
-          body.className = '';
-          if (audio) {
-            audio.currentTime = 0;
-            audio.play().catch(e => console.log('Adhan blocked:', e));
-          }
-        }
-      });
-    }
-
-    setInterval(update, 1000);
-    update();
-  </script>
+setInterval(update, 1000);
+update();
+</script>
 </body>
 </html>

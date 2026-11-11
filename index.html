@@ -9,13 +9,12 @@
   <style>
     :root {
       --bg: #090c10;
-      --card-bg: rgba(22, 27, 34, 0.7);
-      --card-border: rgba(255, 255, 255, 0.08);
+      --card-bg: rgba(22, 27, 34, 0.85);
+      --card-border: rgba(255, 255, 255, 0.12);
       --accent: #10b981;
-      --accent-glow: rgba(16, 185, 129, 0.25);
+      --accent-glow: rgba(16, 185, 129, 0.35);
       --text: #f0f6fc;
-      --text-muted: #8b949e;
-      --highlight: #38bdf8;
+      --text-muted: #9aa4af;
     }
 
     * {
@@ -35,18 +34,15 @@
       justify-content: space-between;
       padding: 3rem 4rem;
       overflow: hidden;
-      transition: filter 1.5s ease, opacity 1.5s ease;
+      transition: filter 1s ease, opacity 1s ease;
       background-image: 
-        radial-gradient(circle at 50% 10%, rgba(16, 185, 129, 0.07) 0%, transparent 60%),
-        radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.04) 0%, transparent 50%);
+        radial-gradient(circle at 50% 10%, rgba(16, 185, 129, 0.1) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.06) 0%, transparent 50%);
     }
 
-    /* Dim mode for night / between prayers */
+    /* Only dim late at night between 11:30 PM and 5:00 AM */
     body.night-dim {
-      filter: brightness(0.2) contrast(0.9);
-    }
-    body.standby-dim {
-      filter: brightness(0.45);
+      filter: brightness(0.25) contrast(0.9);
     }
 
     header {
@@ -57,14 +53,14 @@
 
     .title-area h1 {
       font-family: 'Cinzel', serif;
-      font-size: 2.2rem;
+      font-size: 2.4rem;
       letter-spacing: 2px;
-      color: #e6edf3;
+      color: #ffffff;
     }
 
     .location-tag {
       color: var(--accent);
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       font-weight: 600;
       margin-top: 0.3rem;
       display: flex;
@@ -77,7 +73,7 @@
     }
 
     .current-time {
-      font-size: 4rem;
+      font-size: 4.2rem;
       font-weight: 700;
       letter-spacing: -1px;
       line-height: 1;
@@ -87,7 +83,7 @@
 
     .current-date {
       color: var(--text-muted);
-      font-size: 1.15rem;
+      font-size: 1.2rem;
       margin-top: 0.4rem;
     }
 
@@ -95,24 +91,24 @@
     .status-banner {
       text-align: center;
       margin: 1.5rem 0;
-      padding: 1.2rem;
+      padding: 1.4rem;
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 1.25rem;
       backdrop-filter: blur(12px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
     .status-label {
       text-transform: uppercase;
       letter-spacing: 3px;
-      font-size: 0.9rem;
+      font-size: 1rem;
       color: var(--text-muted);
       font-weight: 600;
     }
 
     .countdown-val {
-      font-size: 3rem;
+      font-size: 3.5rem;
       font-weight: 700;
       color: var(--accent);
       margin-top: 0.3rem;
@@ -135,18 +131,17 @@
       text-align: center;
       transition: all 0.4s ease;
       position: relative;
-      overflow: hidden;
     }
 
     .prayer-card.active-next {
       border-color: var(--accent);
-      background: linear-gradient(180deg, rgba(16, 185, 129, 0.15) 0%, var(--card-bg) 100%);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.22) 0%, var(--card-bg) 100%);
       box-shadow: 0 0 25px var(--accent-glow);
       transform: translateY(-4px);
     }
 
     .prayer-name {
-      font-size: 1.2rem;
+      font-size: 1.25rem;
       font-weight: 600;
       color: var(--text-muted);
       margin-bottom: 0.6rem;
@@ -159,7 +154,7 @@
     }
 
     .prayer-time {
-      font-size: 1.9rem;
+      font-size: 2rem;
       font-weight: 700;
       color: #ffffff;
       font-variant-numeric: tabular-nums;
@@ -170,9 +165,9 @@
       justify-content: space-between;
       align-items: center;
       color: var(--text-muted);
-      font-size: 0.95rem;
+      font-size: 1rem;
       border-top: 1px solid var(--card-border);
-      padding-top: 1rem;
+      padding-top: 1.2rem;
     }
 
     .status-indicator {
@@ -185,14 +180,32 @@
       box-shadow: 0 0 8px var(--accent);
     }
 
-    #audio-toggle {
+    .controls-group {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    button.btn-ctrl {
       background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
       color: #fff;
-      padding: 0.4rem 1rem;
+      padding: 0.5rem 1.2rem;
       border-radius: 999px;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    button.btn-ctrl:hover {
+      background: rgba(255,255,255,0.18);
+    }
+
+    button.btn-ctrl.active {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
     }
   </style>
 </head>
@@ -246,40 +259,62 @@
   <footer>
     <div>
       <span class="status-indicator"></span>
-      <span id="screen-mode-text">Active Display Mode</span>
+      <span id="screen-mode-text">Active Bright Display</span>
     </div>
-    <div>
-      <button id="audio-toggle" onclick="unlockAudio()">Enable Adhan Audio</button>
+    <div class="controls-group">
+      <button class="btn-ctrl" id="test-btn" onclick="testAudio()">▶ Test Sound</button>
+      <button class="btn-ctrl" id="audio-toggle" onclick="toggleAudio()">🔊 Enable Adhan Audio</button>
     </div>
   </footer>
 
-  <!-- Adhan Audio element (Makkah Adhan audio link) -->
+  <!-- Embedded Reliable Adhan Audio Sources -->
   <audio id="adhan-audio" preload="auto">
-    <source src="https://cdn.islamicfinder.org/audio/adhan/azan1.mp3" type="audio/mpeg">
+    <source src="https://raw.githubusercontent.com/Kiwifu/adhan-mp3/main/Adhan_Makkah_%D8%A3%D8%B0%D8%A7%D9%86_%D9%85%D9%83%D8%A9.mp3" type="audio/mpeg">
+    <source src="https://raw.githubusercontent.com/Kiwifu/adhan-mp3/main/Adhan_Madinah_%D8%A3%D8%B0%D8%A7%D9%86_%D8%A7%D9%84%D9%85%D8%AF%D9%8A%D9%86%D8%A9.mp3" type="audio/mpeg">
   </audio>
 
   <script>
-    // Coordinates for Brooklyn, NY (40.6782, -73.9442)
     const LATITUDE = 40.6782;
     const LONGITUDE = -73.9442;
 
     const audio = document.getElementById('adhan-audio');
+    const audioBtn = document.getElementById('audio-toggle');
     let audioUnlocked = false;
     let playedPrayersToday = {};
 
-    function unlockAudio() {
+    function toggleAudio() {
+      // Force play test tone or adhan briefly to unlock browser media state
       audio.play().then(() => {
-        audio.pause();
-        audio.currentTime = 0;
         audioUnlocked = true;
-        document.getElementById('audio-toggle').innerText = "🔊 Audio Active";
-        document.getElementById('audio-toggle').style.background = "#10b981";
-      }).catch(err => console.log('Audio init error:', err));
+        audioBtn.classList.add('active');
+        audioBtn.innerText = "✔ Adhan Audio Enabled";
+      }).catch(err => {
+        alert("Audio error: " + err.message);
+      });
     }
 
-    // Auto-unlock on first TV remote click anywhere
+    function testAudio() {
+      audio.currentTime = 0;
+      audio.play().then(() => {
+        audioUnlocked = true;
+        audioBtn.classList.add('active');
+        audioBtn.innerText = "✔ Adhan Audio Enabled";
+      }).catch(err => {
+        alert("Audio playback failed: " + err.message);
+      });
+    }
+
+    // Auto-unlock when clicking anywhere on screen with remote
     window.addEventListener('click', () => {
-      if (!audioUnlocked) unlockAudio();
+      if (!audioUnlocked) {
+        audio.play().then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          audioUnlocked = true;
+          audioBtn.classList.add('active');
+          audioBtn.innerText = "✔ Adhan Audio Enabled";
+        }).catch(() => {});
+      }
     }, { once: true });
 
     function formatTime(date) {
@@ -290,7 +325,7 @@
     function calculatePrayers() {
       const coordinates = new adhan.Coordinates(LATITUDE, LONGITUDE);
       const params = adhan.CalculationMethod.NorthAmerica();
-      params.madhab = adhan.Madhab.Hanafi; // Adjust if desired
+      params.madhab = adhan.Madhab.Hanafi;
       const today = new Date();
       return new adhan.PrayerTimes(coordinates, today, params);
     }
@@ -298,7 +333,7 @@
     function update() {
       const now = new Date();
       
-      // Update Clock
+      // Update Clock & Date
       document.getElementById('clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
       document.getElementById('date-label').innerText = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
@@ -324,7 +359,6 @@
       let targetTime, targetName, isTomorrow = false;
 
       if (!next) {
-        // Next is tomorrow's Fajr
         const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
         const coords = new adhan.Coordinates(LATITUDE, LONGITUDE);
@@ -347,7 +381,7 @@
 
       // Compute Countdown
       const diffMs = targetTime - now;
-      const diffSecTotal = Math.floor(diffMs / 1000);
+      const diffSecTotal = Math.max(0, Math.floor(diffMs / 1000));
       const diffMinTotal = Math.floor(diffSecTotal / 60);
 
       const hours = Math.floor(diffSecTotal / 3600);
@@ -358,37 +392,34 @@
       document.getElementById('countdown').innerText = 
         `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 
-      // Smart Brightness & Dimming Logic
-      // 1. Night Sleep Dim: Between 11:30 PM and 5:00 AM (unless within 15 min of Fajr)
+      // Smart Dimming Logic:
+      // Keep bright all day. ONLY dim into sleep mode between 11:30 PM and 5:00 AM (unless within 20 mins of Fajr)
       const currentHour = now.getHours();
       const currentMin = now.getMinutes();
-      const isNightTime = (currentHour >= 23 && currentMin >= 30) || (currentHour < 5);
-      const isNearPrayer = diffMinTotal <= 15;
+      const isLateNightSleep = (currentHour === 23 && currentMin >= 30) || (currentHour < 5);
+      const isNearPrayer = diffMinTotal <= 20;
 
       const body = document.body;
       const statusText = document.getElementById('screen-mode-text');
 
-      if (isNightTime && !isNearPrayer) {
+      if (isLateNightSleep && !isNearPrayer) {
         body.className = 'night-dim';
         statusText.innerText = 'Night Sleep Mode (Dimmed)';
-      } else if (!isNearPrayer && diffMinTotal > 20) {
-        body.className = 'standby-dim';
-        statusText.innerText = 'Standby Energy Mode (Auto-brightens 15m before prayer)';
       } else {
         body.className = '';
-        statusText.innerText = 'Active Focus Display';
+        statusText.innerText = 'Active Bright Display';
       }
 
-      // Check if Adhan should play (Trigger within the exact 0-1 second of prayer time)
+      // Trigger Adhan Audio at prayer second
       schedule.filter(p => p.isPrayer).forEach(p => {
         const prayerDiff = Math.abs(now - p.time);
         const prayerKey = `${p.key}-${now.toDateString()}`;
         if (prayerDiff < 1500 && !playedPrayersToday[prayerKey]) {
           playedPrayersToday[prayerKey] = true;
-          body.className = ''; // wake up screen fully
+          body.className = '';
           if (audio) {
             audio.currentTime = 0;
-            audio.play().catch(e => console.log('Audio playback prevented:', e));
+            audio.play().catch(e => console.log('Adhan blocked:', e));
           }
         }
       });

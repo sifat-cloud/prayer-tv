@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart TV Prayer Display</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/adhan@4.4.3/lib/bundles/adhan.umd.js"></script>
+  <style>
+    :root {
+      --bg: #090c10;
+      --card-bg: rgba(22, 27, 34, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.25);
+      --text: #f0f6fc;
+      --text-muted: #8b949e;
+      --highlight: #38bdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 3rem 4rem;
+      overflow: hidden;
+      transition: filter 1.5s ease, opacity 1.5s ease;
+      background-image: 
+        radial-gradient(circle at 50% 10%, rgba(16, 185, 129, 0.07) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.04) 0%, transparent 50%);
+    }
+
+    /* Dim mode for night / between prayers */
+    body.night-dim {
+      filter: brightness(0.2) contrast(0.9);
+    }
+    body.standby-dim {
+      filter: brightness(0.45);
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .title-area h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 2.2rem;
+      letter-spacing: 2px;
+      color: #e6edf3;
+    }
+
+    .location-tag {
+      color: var(--accent);
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 0.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .clock-area {
+      text-align: right;
+    }
+
+    .current-time {
+      font-size: 4rem;
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .current-date {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      margin-top: 0.4rem;
+    }
+
+    /* Countdown & Status */
+    .status-banner {
+      text-align: center;
+      margin: 1.5rem 0;
+      padding: 1.2rem;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 1.25rem;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    .status-label {
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .countdown-val {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-top: 0.3rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Prayer Grid */
+    .prayer-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .prayer-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 1.2rem;
+      padding: 1.6rem 1.2rem;
+      text-align: center;
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .prayer-card.active-next {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.15) 0%, var(--card-bg) 100%);
+      box-shadow: 0 0 25px var(--accent-glow);
+      transform: translateY(-4px);
+    }
+
+    .prayer-name {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .prayer-card.active-next .prayer-name {
+      color: var(--accent);
+    }
+
+    .prayer-time {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      border-top: 1px solid var(--card-border);
+      padding-top: 1rem;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin-right: 6px;
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    #audio-toggle {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title-area">
+      <h1>SALAH TIME</h1>
+      <div class="location-tag">
+        <span>📍 Brooklyn, NY</span>
+        <span style="color: var(--text-muted); font-weight: 400;">• ISNA Method</span>
+      </div>
+    </div>
+    <div class="clock-area">
+      <div class="current-time" id="clock">--:--:--</div>
+      <div class="current-date" id="date-label">Loading date...</div>
+    </div>
+  </header>
+
+  <div class="status-banner">
+    <div class="status-label" id="status-label">Next Prayer Countdown</div>
+    <div class="countdown-val" id="countdown">--:--:--</div>
+  </div>
+
+  <div class="prayer-grid" id="prayer-cards">
+    <div class="prayer-card" id="card-fajr">
+      <div class="prayer-name">Fajr</div>
+      <div class="prayer-time" id="time-fajr">--:--</div>
+    </div>
+    <div class="prayer-card" id="card-sunrise">
+      <div class="prayer-name">Sunrise</div>
+      <div class="prayer-time" id="time-sunrise">--:--</div>
+    </div>
+    <div class="prayer-card" id="card-dhuhr">
+      <div class="prayer-name">Dhuhr</div>
+      <div class="prayer-time" id="time-dhuhr">--:--</div>
+    </div>
+    <div class="prayer-card" id="card-asr">
+      <div class="prayer-name">Asr</div>
+      <div class="prayer-time" id="time-asr">--:--</div>
+    </div>
+    <div class="prayer-card" id="card-maghrib">
+      <div class="prayer-name">Maghrib</div>
+      <div class="prayer-time" id="time-maghrib">--:--</div>
+    </div>
+    <div class="prayer-card" id="card-isha">
+      <div class="prayer-name">Isha</div>
+      <div class="prayer-time" id="time-isha">--:--</div>
+    </div>
+  </div>
+
+  <footer>
+    <div>
+      <span class="status-indicator"></span>
+      <span id="screen-mode-text">Active Display Mode</span>
+    </div>
+    <div>
+      <button id="audio-toggle" onclick="unlockAudio()">Enable Adhan Audio</button>
+    </div>
+  </footer>
+
+  <!-- Adhan Audio element (Makkah Adhan audio link) -->
+  <audio id="adhan-audio" preload="auto">
+    <source src="https://cdn.islamicfinder.org/audio/adhan/azan1.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    // Coordinates for Brooklyn, NY (40.6782, -73.9442)
+    const LATITUDE = 40.6782;
+    const LONGITUDE = -73.9442;
+
+    const audio = document.getElementById('adhan-audio');
+    let audioUnlocked = false;
+    let playedPrayersToday = {};
+
+    function unlockAudio() {
+      audio.play().then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+        audioUnlocked = true;
+        document.getElementById('audio-toggle').innerText = "🔊 Audio Active";
+        document.getElementById('audio-toggle').style.background = "#10b981";
+      }).catch(err => console.log('Audio init error:', err));
+    }
+
+    // Auto-unlock on first TV remote click anywhere
+    window.addEventListener('click', () => {
+      if (!audioUnlocked) unlockAudio();
+    }, { once: true });
+
+    function formatTime(date) {
+      if (!date) return '--:--';
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+
+    function calculatePrayers() {
+      const coordinates = new adhan.Coordinates(LATITUDE, LONGITUDE);
+      const params = adhan.CalculationMethod.NorthAmerica();
+      params.madhab = adhan.Madhab.Hanafi; // Adjust if desired
+      const today = new Date();
+      return new adhan.PrayerTimes(coordinates, today, params);
+    }
+
+    function update() {
+      const now = new Date();
+      
+      // Update Clock
+      document.getElementById('clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      document.getElementById('date-label').innerText = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+      const prayers = calculatePrayers();
+      if (!prayers) return;
+
+      const schedule = [
+        { key: 'fajr', name: 'Fajr', time: prayers.fajr, isPrayer: true },
+        { key: 'sunrise', name: 'Sunrise', time: prayers.sunrise, isPrayer: false },
+        { key: 'dhuhr', name: 'Dhuhr', time: prayers.dhuhr, isPrayer: true },
+        { key: 'asr', name: 'Asr', time: prayers.asr, isPrayer: true },
+        { key: 'maghrib', name: 'Maghrib', time: prayers.maghrib, isPrayer: true },
+        { key: 'isha', name: 'Isha', time: prayers.isha, isPrayer: true }
+      ];
+
+      // Update Card Labels
+      schedule.forEach(p => {
+        document.getElementById(`time-${p.key}`).innerText = formatTime(p.time);
+      });
+
+      // Find next upcoming prayer
+      let next = schedule.find(p => p.time > now);
+      let targetTime, targetName, isTomorrow = false;
+
+      if (!next) {
+        // Next is tomorrow's Fajr
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const coords = new adhan.Coordinates(LATITUDE, LONGITUDE);
+        const params = adhan.CalculationMethod.NorthAmerica();
+        const tomorrowPrayers = new adhan.PrayerTimes(coords, tomorrow, params);
+        targetTime = tomorrowPrayers.fajr;
+        targetName = 'Fajr (Tomorrow)';
+        isTomorrow = true;
+      } else {
+        targetTime = next.time;
+        targetName = next.name;
+      }
+
+      // Highlight active card
+      document.querySelectorAll('.prayer-card').forEach(card => card.classList.remove('active-next'));
+      if (!isTomorrow && next) {
+        const activeCard = document.getElementById(`card-${next.key}`);
+        if (activeCard) activeCard.classList.add('active-next');
+      }
+
+      // Compute Countdown
+      const diffMs = targetTime - now;
+      const diffSecTotal = Math.floor(diffMs / 1000);
+      const diffMinTotal = Math.floor(diffSecTotal / 60);
+
+      const hours = Math.floor(diffSecTotal / 3600);
+      const mins = Math.floor((diffSecTotal % 3600) / 60);
+      const secs = diffSecTotal % 60;
+
+      document.getElementById('status-label').innerText = `Countdown to ${targetName}`;
+      document.getElementById('countdown').innerText = 
+        `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+      // Smart Brightness & Dimming Logic
+      // 1. Night Sleep Dim: Between 11:30 PM and 5:00 AM (unless within 15 min of Fajr)
+      const currentHour = now.getHours();
+      const currentMin = now.getMinutes();
+      const isNightTime = (currentHour >= 23 && currentMin >= 30) || (currentHour < 5);
+      const isNearPrayer = diffMinTotal <= 15;
+
+      const body = document.body;
+      const statusText = document.getElementById('screen-mode-text');
+
+      if (isNightTime && !isNearPrayer) {
+        body.className = 'night-dim';
+        statusText.innerText = 'Night Sleep Mode (Dimmed)';
+      } else if (!isNearPrayer && diffMinTotal > 20) {
+        body.className = 'standby-dim';
+        statusText.innerText = 'Standby Energy Mode (Auto-brightens 15m before prayer)';
+      } else {
+        body.className = '';
+        statusText.innerText = 'Active Focus Display';
+      }
+
+      // Check if Adhan should play (Trigger within the exact 0-1 second of prayer time)
+      schedule.filter(p => p.isPrayer).forEach(p => {
+        const prayerDiff = Math.abs(now - p.time);
+        const prayerKey = `${p.key}-${now.toDateString()}`;
+        if (prayerDiff < 1500 && !playedPrayersToday[prayerKey]) {
+          playedPrayersToday[prayerKey] = true;
+          body.className = ''; // wake up screen fully
+          if (audio) {
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log('Audio playback prevented:', e));
+          }
+        }
+      });
+    }
+
+    setInterval(update, 1000);
+    update();
+  </script>
+</body>
+</html>
